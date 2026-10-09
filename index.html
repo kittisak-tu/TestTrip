@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบบัญชีกองกลางทริป (Trip Pool Tracker)</title>
+  <title>ระบบบัญชีกองกลางทริป (Google Sheet Database)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -11,28 +11,23 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
     body { font-family: 'Kanit', sans-serif; }
-    .glass-card {
-      background: rgba(30, 41, 59, 0.7);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
+    .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
   </style>
 </head>
 <body class="h-full pb-20 selection:bg-indigo-500 selection:text-white">
   
-  <!-- Header Nav -->
   <header class="sticky top-0 z-40 glass-card border-b border-slate-800/80 px-4 py-3 shadow-md">
     <div class="max-w-md mx-auto flex items-center justify-between">
       <div class="flex items-center space-x-2">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
-          <i class="fa-solid me-0 fa-wallet text-base"></i>
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-lg">
+          <i class="fa-solid fa-file-excel text-base"></i>
         </div>
         <div>
           <h1 class="font-bold text-base text-white leading-tight">Trip Expense Pool</h1>
           <div class="flex items-center space-x-1">
             <span id="syncStatusBadge" class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <span class="w-1.5 h-1.5 mr-1 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span id="syncStatusText">Online Sync</span>
+              <span id="syncStatusText">Google Sheet Connected</span>
             </span>
             <span id="roomBadge" class="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded-full font-mono border border-slate-700"></span>
           </div>
@@ -40,668 +35,295 @@
       </div>
 
       <div class="flex items-center space-x-1.5">
-        <button id="btnShareTrip" onclick="openShareModal()" class="p-2 text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition border border-slate-700">
+        <button onclick="openShareModal()" class="p-2 text-slate-300 hover:text-white bg-slate-800 rounded-xl border border-slate-700">
           <i class="fa-solid fa-share-nodes text-sm"></i>
         </button>
-        <button id="btnSyncConfig" onclick="openSyncModal()" class="p-2 text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 rounded-xl transition border border-indigo-500/30">
+        <button onclick="openSyncModal()" class="p-2 text-indigo-400 bg-indigo-500/10 rounded-xl border border-indigo-500/30">
           <i class="fa-solid fa-wifi text-sm"></i>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- Main Container -->
   <main class="max-w-md mx-auto px-4 pt-4 space-y-4">
-
-    <!-- Top Summary Card -->
-    <div class="glass-card rounded-2xl p-4 shadow-xl border border-indigo-500/20 relative overflow-hidden">
-      <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
-      
+    <div class="glass-card rounded-2xl p-4 shadow-xl border border-emerald-500/20">
       <div class="text-xs text-slate-400 mb-1 flex justify-between items-center">
-        <span>เงินกองกลางคงเหลือในคลัง</span>
-        <span class="text-[10px] text-slate-500" id="lastUpdatedTime">อัปเดตล่าสุด: เมื่อครู่</span>
+        <span>เงินกองกลางคงเหลือ</span>
+        <span class="text-[10px] text-slate-500">Auto Sync ทุก 3 วิ</span>
       </div>
-      
       <div class="flex items-baseline space-x-1 mb-3">
-        <span class="text-3xl font-extrabold text-white tracking-tight" id="dispPoolBalance">0.00</span>
-        <span class="text-slate-400 text-sm font-medium">บาท</span>
+        <span class="text-3xl font-extrabold text-white" id="dispPoolBalance">0.00</span>
+        <span class="text-slate-400 text-sm">บาท</span>
       </div>
-
-      <!-- Quick Metrics Grid -->
       <div class="grid grid-cols-2 gap-2 pt-3 border-t border-slate-700/50 text-xs">
         <div class="bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/30">
-          <div class="text-slate-400 mb-0.5 text-[11px]">เติมเข้ากองกลางรวม</div>
+          <div class="text-slate-400 text-[11px]">เติมเข้ากองกลางรวม</div>
           <div class="font-semibold text-emerald-400 text-sm" id="dispTotalPoolIn">฿0.00</div>
         </div>
         <div class="bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/30">
-          <div class="text-slate-400 mb-0.5 text-[11px]">ใช้ออกสากองกลาง</div>
+          <div class="text-slate-400 text-[11px]">ใช้ออกสากองกลาง</div>
           <div class="font-semibold text-rose-400 text-sm" id="dispTotalPoolOut">฿0.00</div>
         </div>
       </div>
     </div>
 
-    <!-- Action Bar -->
     <div class="grid grid-cols-2 gap-2">
-      <button onclick="openDepositModal()" class="flex items-center justify-center space-x-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white py-2.5 px-3 rounded-xl font-medium shadow-lg shadow-emerald-900/30 transition text-sm">
-        <i class="fa-solid fa-plus-circle"></i>
-        <span>เติมเงินกองกลาง</span>
+      <button onclick="openDepositModal()" class="flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 px-3 rounded-xl font-medium text-sm">
+        <i class="fa-solid fa-plus-circle"></i><span>เติมเงินกองกลาง</span>
       </button>
-      <button onclick="openExpenseModal()" class="flex items-center justify-center space-x-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-2.5 px-3 rounded-xl font-medium shadow-lg shadow-indigo-900/30 transition text-sm">
-        <i class="fa-solid fa-receipt"></i>
-        <span>ลงรายการจ่าย</span>
+      <button onclick="openExpenseModal()" class="flex items-center justify-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 px-3 rounded-xl font-medium text-sm">
+        <i class="fa-solid fa-receipt"></i><span>ลงรายการจ่าย</span>
       </button>
     </div>
 
-    <!-- Group Members Overview -->
-    <div class="glass-card rounded-2xl p-4 shadow-lg">
+    <div class="glass-card rounded-2xl p-4">
       <div class="flex justify-between items-center mb-3">
-        <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-1.5">
-          <i class="fa-solid fa-users text-indigo-400"></i>
-          <span>สมาชิกทริป (<span id="memberCount">0</span> คน)</span>
-        </h2>
-        <button onclick="openAddMemberModal()" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1">
-          <i class="fa-solid fa-user-plus text-[10px]"></i>
-          <span>เพิ่มสมาชิก</span>
-        </button>
+        <h2 class="text-sm font-semibold text-slate-200">สมาชิกทริป (<span id="memberCount">0</span> คน)</h2>
+        <button onclick="openAddMemberModal()" class="text-xs text-indigo-400 font-medium">+ เพิ่มสมาชิก</button>
       </div>
-      <div id="membersList" class="flex flex-wrap gap-2">
-        <!-- Members Chip Rendered Here -->
-      </div>
+      <div id="membersList" class="flex flex-wrap gap-2"></div>
     </div>
 
-    <!-- Transaction Logs -->
-    <div class="glass-card rounded-2xl p-4 shadow-lg">
-      <div class="flex justify-between items-center mb-3">
-        <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-1.5">
-          <i class="fa-solid fa-list-check text-indigo-400"></i>
-          <span>ประวัติรายการทั้งหมด</span>
-        </h2>
-      </div>
-
-      <div id="txList" class="space-y-2 max-h-80 overflow-y-auto pr-1">
-        <!-- Transactions Rendered Here -->
-      </div>
+    <div class="glass-card rounded-2xl p-4">
+      <h2 class="text-sm font-semibold text-slate-200 mb-3">ประวัติรายการทั้งหมด</h2>
+      <div id="txList" class="space-y-2 max-h-80 overflow-y-auto pr-1"></div>
     </div>
 
-    <!-- Trip Settlement Summary Section -->
-    <div class="glass-card rounded-2xl p-4 shadow-lg border border-purple-500/20">
-      <div class="flex justify-between items-center mb-3">
-        <div>
-          <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-1.5">
-            <i class="fa-solid fa-calculator text-purple-400"></i>
-            <span>สรุปยอดเคลียร์เงินทริป</span>
-          </h2>
-          <p class="text-[11px] text-slate-400">คำนวณเงินหารคืน/จ่ายเพิ่มอัตโนมัติเมื่อจบทริป</p>
-        </div>
-      </div>
-
-      <div id="settlementResults" class="space-y-2 mt-3 pt-3 border-t border-slate-800">
-        <!-- Settlement calculation items rendered here -->
-      </div>
+    <div class="glass-card rounded-2xl p-4 border border-purple-500/20">
+      <h2 class="text-sm font-semibold text-slate-200">สรุปยอดเคลียร์เงินทริป</h2>
+      <div id="settlementResults" class="space-y-2 mt-3 pt-3 border-t border-slate-800"></div>
     </div>
-
   </main>
 
-  <!-- Modals Section -->
-
-  <!-- Modal 1: Sync Room Modal -->
+  <!-- Modals -->
   <div id="syncModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="glass-card w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-slate-700">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="font-bold text-base text-white flex items-center gap-2">
-          <i class="fa-solid fa-wifi text-indigo-400"></i>
-          <span>เชื่อมต่อทริปออนไลน์ (Sync)</span>
-        </h3>
-        <button onclick="closeModal('syncModal')" class="text-slate-400 hover:text-white">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-      
-      <div class="space-y-4">
-        <div>
-          <label class="block text-xs font-medium text-slate-300 mb-1">รหัสห้องทริป (Trip Code)</label>
-          <div class="flex gap-2">
-            <input type="text" id="inputRoomCode" placeholder="เช่น JAPAN2026" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono tracking-wider uppercase">
-            <button onclick="generateRandomRoom()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-2 rounded-xl text-xs flex-shrink-0">
-              <i class="fa-solid fa-shuffle"></i> สุ่ม
-            </button>
-          </div>
-          <p class="text-[11px] text-slate-400 mt-1">ใส่ารหัสเดียวกันกับเพื่อน เพื่อดึงและแชร์ข้อมูลทริปร่วมกันเรียลไทม์</p>
-        </div>
-
-        <button onclick="switchRoom()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl text-sm transition">
-          เข้าสู่ห้องทริปนี้
-        </button>
-      </div>
+    <div class="glass-card w-full max-w-sm rounded-2xl p-5 border border-slate-700">
+      <h3 class="font-bold text-white mb-3">สลับรหัสห้องทริป</h3>
+      <input type="text" id="inputRoomCode" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white mb-3 uppercase">
+      <button onclick="switchRoom()" class="w-full bg-indigo-600 text-white py-2 rounded-xl text-sm">เข้าสู่ห้องนี้</button>
     </div>
   </div>
 
-  <!-- Modal 2: Add Deposit -->
   <div id="depositModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="glass-card w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-slate-700">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="font-bold text-base text-white flex items-center gap-2">
-          <i class="fa-solid fa-piggy-bank text-emerald-400"></i>
-          <span>เติมเงินเข้ากองกลาง</span>
-        </h3>
-        <button onclick="closeModal('depositModal')" class="text-slate-400 hover:text-white">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
+    <div class="glass-card w-full max-w-sm rounded-2xl p-5 border border-slate-700">
+      <h3 class="font-bold text-white mb-3">เติมเงินเข้ากองกลาง</h3>
       <form onsubmit="handleDeposit(event)" class="space-y-3">
-        <div>
-          <label class="block text-xs font-medium text-slate-300 mb-1">ผู้เติมเงิน</label>
-          <select id="depositPayer" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" required>
-            <!-- Member options -->
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-xs font-medium text-slate-300 mb-1">จำนวนเงิน (บาท)</label>
-          <input type="number" step="0.01" min="1" id="depositAmount" placeholder="0.00" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" required>
-        </div>
-
-        <div>
-          <label class="block text-xs font-medium text-slate-300 mb-1">บันทึกเพิ่มเติม (ไม่บังคับ)</label>
-          <input type="text" id="depositNote" placeholder="เช่น เงินกองกลางตั้งต้นรอบที่ 1" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-        </div>
-
-        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-xl text-sm transition mt-2">
-          ยืนยันการเติมเงิน
-        </button>
+        <select id="depositPayer" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"></select>
+        <input type="number" step="0.01" min="1" id="depositAmount" placeholder="จำนวนเงิน" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
+        <input type="text" id="depositNote" placeholder="บันทึกเพิ่มเติม" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white">
+        <button type="submit" class="w-full bg-emerald-600 text-white py-2 rounded-xl text-sm">ตกลง</button>
       </form>
     </div>
   </div>
 
-  <!-- Modal 3: Add Expense -->
   <div id="expenseModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="glass-card w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-slate-700">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="font-bold text-base text-white flex items-center gap-2">
-          <i class="fa-solid fa-file-invoice-dollar text-indigo-400"></i>
-          <span>บันทึกรายการค่าใช้จ่าย</span>
-        </h3>
-        <button onclick="closeModal('expenseModal')" class="text-slate-400 hover:text-white">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
+    <div class="glass-card w-full max-w-sm rounded-2xl p-5 border border-slate-700">
+      <h3 class="font-bold text-white mb-3">บันทึกค่าใช้จ่าย</h3>
       <form onsubmit="handleExpense(event)" class="space-y-3">
-        <div>
-          <label class="block text-xs font-medium text-slate-300 mb-1">ชื่อรายการค่าใช้จ่าย</label>
-          <input type="text" id="expenseTitle" placeholder="เช่น ค่าอาหารเย็น, ค่าน้ำมัน" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" required>
-        </div>
-
-        <div>
-          <label class="block text-xs font-medium text-slate-300 mb-1">จำนวนเงิน (บาท)</label>
-          <input type="number" step="0.01" min="1" id="expenseAmount" placeholder="0.00" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" required>
-        </div>
-
-        <div>
-          <label class="block text-xs font-medium text-slate-300 mb-1">จ่ายโดยวิธีไหน?</label>
-          <select id="expensePayerType" onchange="togglePayerMemberSelect()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
-            <option value="POOL">ใช้เงินกองกลางจ่าย</option>
-            <option value="MEMBER">สมาชิกสำรองจ่ายส่วนตัวไปก่อน</option>
-          </select>
-        </div>
-
+        <input type="text" id="expenseTitle" placeholder="ชื่อรายการ" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
+        <input type="number" step="0.01" min="1" id="expenseAmount" placeholder="จำนวนเงิน" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" required>
+        <select id="expensePayerType" onchange="togglePayerMemberSelect()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white">
+          <option value="POOL">ใช้เงินกองกลางจ่าย</option>
+          <option value="MEMBER">สมาชิกสำรองจ่ายส่วนตัว</option>
+        </select>
         <div id="payerMemberGroup" class="hidden">
-          <label class="block text-xs font-medium text-slate-300 mb-1">ใครเป็นคนสำรองจ่าย?</label>
-          <select id="expensePayerMember" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
-            <!-- Member options -->
-          </select>
+          <select id="expensePayerMember" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"></select>
         </div>
-
-        <div>
-          <label class="block text-xs font-medium text-slate-300 mb-1">หมวดหมู่</label>
-          <select id="expenseCategory" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
-            <option value="อาหาร">🍔 อาหาร/เครื่องดื่ม</option>
-            <option value="เดินทาง">🚗 ค่าน้ำมัน/เดินทาง</option>
-            <option value="ที่พัก">🏨 ค่าที่พัก</option>
-            <option value="เที่ยว">🎟️ ค่าเข้าชม/กิจกรรม</option>
-            <option value="อื่นๆ">📦 อื่นๆ</option>
-          </select>
-        </div>
-
-        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl text-sm transition mt-2">
-          บันทึกค่าใช้จ่าย
-        </button>
+        <select id="expenseCategory" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white">
+          <option value="อาหาร">🍔 อาหาร/เครื่องดื่ม</option>
+          <option value="เดินทาง">🚗 ค่าน้ำมัน/เดินทาง</option>
+          <option value="ที่พัก">🏨 ค่าที่พัก</option>
+          <option value="อื่นๆ">📦 อื่นๆ</option>
+        </select>
+        <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-xl text-sm">บันทึก</button>
       </form>
     </div>
   </div>
 
-  <!-- Modal 4: Share Modal -->
   <div id="shareModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="glass-card w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-slate-700 text-center">
-      <div class="flex justify-between items-center mb-3">
-        <h3 class="font-bold text-base text-white">แชร์ทริปให้เพื่อน</h3>
-        <button onclick="closeModal('shareModal')" class="text-slate-400 hover:text-white">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <div class="bg-white p-3 rounded-xl inline-block my-2 shadow-lg">
-        <div id="qrcode"></div>
-      </div>
-      <p class="text-xs text-slate-400 mb-3">ให้เพื่อนสแกน QR Code หรือส่งลิงก์เพื่อให้เพื่อนเข้าทริปเดียวกัน</p>
-
-      <div class="flex gap-2">
-        <button onclick="copyShareLink()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1.5">
-          <i class="fa-solid fa-copy"></i>
-          <span>คัดลอกลิงก์</span>
-        </button>
-      </div>
+    <div class="glass-card w-full max-w-sm rounded-2xl p-5 text-center">
+      <h3 class="font-bold text-white mb-2">แชร์ทริปให้เพื่อน</h3>
+      <div id="qrcode" class="bg-white p-2 inline-block rounded-xl my-2"></div>
+      <button onclick="copyShareLink()" class="w-full bg-indigo-600 text-white py-2 rounded-xl text-xs mt-2">คัดลอกลิงก์</button>
     </div>
   </div>
 
-  <!-- JavaScript Logic -->
   <script>
-    // --- Global Application State ---
+    // ⬇️ วาง Web App URL ที่ก๊อปปี้มาจาก Google Apps Script ตรงนี้ ⬇️
+    const GOOGLE_SHEET_API_URL = "วาง_URL_GOOGLE_APPS_SCRIPT_ตรงนี้";
+
     let state = {
-      roomCode: "TRIP" + Math.floor(1000 + Math.random() * 9000),
+      roomCode: "TRIP123",
       members: ["A", "B", "C"],
-      transactions: [], // { id, type: 'DEPOSIT'|'EXPENSE', amount, payer, title, category, timestamp }
-      isSyncing: false
+      transactions: []
     };
 
-    const CLOUD_SYNC_ENDPOINT = "https://api.jsonbin.io/v3/b"; 
-    // Using KV storage API pattern for seamless zero-config realtime sharing
-    const PUBLIC_RELAY_URL = "https://ntfy.sh/trip_pool_tracker_sync_";
-
-    // --- Initialization ---
     window.addEventListener('DOMContentLoaded', () => {
-      // Read Room Code from URL query if present
       const urlParams = new URLSearchParams(window.location.search);
       const roomFromUrl = urlParams.get('room');
-      if (roomFromUrl) {
-        state.roomCode = roomFromUrl.toUpperCase();
-      } else {
-        const savedRoom = localStorage.getItem('trip_room_code');
-        if (savedRoom) state.roomCode = savedRoom;
-      }
-
-      document.getElementById('inputRoomCode').value = state.roomCode;
+      if (roomFromUrl) state.roomCode = roomFromUrl.toUpperCase();
       
-      // Load Initial Local Cache or Fetch from Cloud
-      loadFromLocalCache();
-      fetchCloudState();
-
-      // Poll cloud for updates every 3.5 seconds
-      setInterval(fetchCloudState, 3500);
-
-      renderApp();
+      document.getElementById('inputRoomCode').value = state.roomCode;
+      fetchSheetData();
+      setInterval(fetchSheetData, 3000); // Auto pull updates
     });
 
-    // --- Core Cloud Realtime Sync ---
-    async function fetchCloudState() {
+    async function fetchSheetData() {
       try {
-        const res = await fetch(`https://kvdb.io/4y3N58Rvx6iL9y45L12vN4/${state.roomCode}`);
+        const res = await fetch(`${GOOGLE_SHEET_API_URL}?room=${state.roomCode}`);
         if (res.ok) {
           const data = await res.json();
-          if (data && data.timestamp > (state.lastUpdated || 0)) {
-            state = data;
-            saveToLocalCache();
-            renderApp();
-          }
+          state.members = data.members || ["A", "B", "C"];
+          state.transactions = data.transactions || [];
+          renderApp();
         }
-      } catch (err) {
-        // Fallback or offline silence
-      }
+      } catch (err) {}
     }
 
-    async function pushCloudState() {
-      state.lastUpdated = Date.now();
-      saveToLocalCache();
+    async function pushSheetData() {
       renderApp();
-
-      document.getElementById('syncStatusText').innerText = "กำลังซิงค์...";
       try {
-        await fetch(`https://kvdb.io/4y3N58Rvx6iL9y45L12vN4/${state.roomCode}`, {
+        await fetch(GOOGLE_SHEET_API_URL, {
           method: 'POST',
-          body: JSON.stringify(state),
-          headers: { 'Content-Type': 'application/json' }
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(state)
         });
-        document.getElementById('syncStatusText').innerText = "Online Sync";
-      } catch (err) {
-        document.getElementById('syncStatusText').innerText = "Saved Offline";
-      }
+      } catch (err) {}
     }
 
-    function saveToLocalCache() {
-      localStorage.setItem('trip_room_code', state.roomCode);
-      localStorage.setItem(`trip_data_${state.roomCode}`, JSON.stringify(state));
-    }
-
-    function loadFromLocalCache() {
-      const cached = localStorage.getItem(`trip_data_${state.roomCode}`);
-      if (cached) {
-        try { state = JSON.parse(cached); } catch(e){}
-      }
-    }
-
-    // --- Render Functions ---
     function renderApp() {
-      // Room badge & status
       document.getElementById('roomBadge').innerText = `#${state.roomCode}`;
+      let totalDeposit = 0, totalPoolSpent = 0;
 
-      // Calculate Math Summary
-      let totalDeposit = 0;
-      let totalPoolSpent = 0;
-
-      state.transactions.forEach(tx => {
-        if (tx.type === 'DEPOSIT') {
-          totalDeposit += Number(tx.amount);
-        } else if (tx.type === 'EXPENSE') {
-          if (tx.payerType === 'POOL') {
-            totalPoolSpent += Number(tx.amount);
-          }
-        }
+      (state.transactions || []).forEach(tx => {
+        if (tx.type === 'DEPOSIT') totalDeposit += Number(tx.amount);
+        else if (tx.type === 'EXPENSE' && tx.payerType === 'POOL') totalPoolSpent += Number(tx.amount);
       });
 
-      const poolBalance = totalDeposit - totalPoolSpent;
-
-      document.getElementById('dispPoolBalance').innerText = poolBalance.toLocaleString('th-TH', { minimumFractionDigits: 2 });
-      document.getElementById('dispTotalPoolIn').innerText = `฿${totalDeposit.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
-      document.getElementById('dispTotalPoolOut').innerText = `฿${totalPoolSpent.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
+      document.getElementById('dispPoolBalance').innerText = (totalDeposit - totalPoolSpent).toLocaleString('th-TH', { minimumFractionDigits: 2 });
+      document.getElementById('dispTotalPoolIn').innerText = `฿${totalDeposit.toLocaleString('th-TH')}`;
+      document.getElementById('dispTotalPoolOut').innerText = `฿${totalPoolSpent.toLocaleString('th-TH')}`;
       document.getElementById('memberCount').innerText = state.members.length;
 
-      // Render Members
-      const membersContainer = document.getElementById('membersList');
-      membersContainer.innerHTML = state.members.map(m => `
-        <div class="inline-flex items-center bg-slate-800 text-slate-200 border border-slate-700/80 px-2.5 py-1 rounded-xl text-xs font-medium shadow-sm">
-          <span class="w-2 h-2 rounded-full bg-indigo-400 mr-1.5"></span>
-          <span>${m}</span>
-          <button onclick="removeMember('${m}')" class="ml-1.5 text-slate-500 hover:text-rose-400 text-[10px]">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
+      document.getElementById('membersList').innerHTML = state.members.map(m => `
+        <span class="bg-slate-800 text-slate-200 border border-slate-700 px-2.5 py-1 rounded-xl text-xs">${m}</span>
       `).join('');
 
-      // Render Select Dropdowns
-      const depositSelect = document.getElementById('depositPayer');
-      const expensePayerSelect = document.getElementById('expensePayerMember');
-      
-      const memberOptions = state.members.map(m => `<option value="${m}">${m}</option>`).join('');
-      depositSelect.innerHTML = memberOptions;
-      expensePayerSelect.innerHTML = memberOptions;
+      const memberOpts = state.members.map(m => `<option value="${m}">${m}</option>`).join('');
+      document.getElementById('depositPayer').innerHTML = memberOpts;
+      document.getElementById('expensePayerMember').innerHTML = memberOpts;
 
-      // Render Transactions
       const txContainer = document.getElementById('txList');
-      if (state.transactions.length === 0) {
-        txContainer.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">ยังไม่มีรายการค่าใช้จ่าย</div>`;
+      if ((state.transactions || []).length === 0) {
+        txContainer.innerHTML = `<div class="text-center py-4 text-slate-500 text-xs">ยังไม่มีรายการ</div>`;
       } else {
-        txContainer.innerHTML = state.transactions.slice().reverse().map(tx => {
-          const isDeposit = tx.type === 'DEPOSIT';
-          return `
-            <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/40 border border-slate-800 hover:border-slate-700 transition text-xs">
-              <div class="flex items-center space-x-2.5">
-                <div class="w-8 h-8 rounded-lg ${isDeposit ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'} flex items-center justify-center flex-shrink-0 text-sm">
-                  <i class="fa-solid ${isDeposit ? 'fa-piggy-bank' : 'fa-receipt'}"></i>
-                </div>
-                <div>
-                  <div class="font-medium text-slate-200">${tx.title}</div>
-                  <div class="text-[10px] text-slate-400">
-                    ${isDeposit ? `เติมโดย: <span class="text-slate-300">${tx.payer}</span>` : `${tx.category} •${tx.payerType === 'POOL' ? '<span class="text-emerald-400">ตัดกองกลาง</span>' : `จ่ายโดย ${tx.payer}`}`}
-                  </div>
-                </div>
-              </div>
-              <div class="text-right">
-                <div class="font-bold ${isDeposit ? 'text-emerald-400' : 'text-slate-200'}">
-                  ${isDeposit ? '+' : ''}${Number(tx.amount).toLocaleString('th-TH', { minimumFractionDigits: 2 })} ฿
-                </div>
-                <button onclick="deleteTx('${tx.id}')" class="text-[10px] text-slate-500 hover:text-rose-400">
-                  ลบรายการ
-                </button>
-              </div>
+        txContainer.innerHTML = state.transactions.slice().reverse().map(tx => `
+          <div class="flex justify-between p-2 rounded-xl bg-slate-800/40 text-xs border border-slate-800">
+            <div>
+              <div class="font-medium text-slate-200">${tx.title}</div>
+              <div class="text-[10px] text-slate-400">${tx.type === 'DEPOSIT' ? `เติมโดย: ${tx.payer}` : `${tx.category} •${tx.payer}`}</div>
             </div>
-          `;
-        }).join('');
+            <div class="font-bold ${tx.type === 'DEPOSIT' ? 'text-emerald-400' : 'text-slate-200'}">
+              ${tx.type === 'DEPOSIT' ? '+' : ''}${Number(tx.amount).toLocaleString('th-TH')} ฿
+            </div>
+          </div>
+        `).join('');
       }
 
-      // Compute Settlement
       calculateSettlement();
     }
 
-    // --- Settlement Calculation Logic ---
     function calculateSettlement() {
-      const numMembers = state.members.length;
-      const resultsContainer = document.getElementById('settlementResults');
+      const num = state.members.length;
+      if (num === 0) return;
 
-      if (numMembers === 0) {
-        resultsContainer.innerHTML = `<div class="text-xs text-slate-500 text-center">โปรดเพิ่มสมาชิกอย่างน้อย 1 คน</div>`;
-        return;
-      }
+      let totalPersonal = 0, totalPoolSpent = 0, totalPoolDeposits = 0;
+      let memberDeposits = {}, memberOutPockets = {};
+      state.members.forEach(m => { memberDeposits[m] = 0; memberOutPockets[m] = 0; });
 
-      // Calculate Total Out-of-pocket expenses paid by individuals (excluding Pool payments)
-      let totalPersonalExpenses = 0;
-      let totalPoolDeposits = 0;
-      let totalPoolSpent = 0;
-
-      // Track individual contributions
-      let memberDeposits = {};
-      let memberOutPockets = {};
-
-      state.members.forEach(m => {
-        memberDeposits[m] = 0;
-        memberOutPockets[m] = 0;
-      });
-
-      state.transactions.forEach(tx => {
+      (state.transactions || []).forEach(tx => {
         const amt = Number(tx.amount);
         if (tx.type === 'DEPOSIT') {
           totalPoolDeposits += amt;
           if (memberDeposits[tx.payer] !== undefined) memberDeposits[tx.payer] += amt;
         } else if (tx.type === 'EXPENSE') {
-          if (tx.payerType === 'POOL') {
-            totalPoolSpent += amt;
-          } else if (tx.payerType === 'MEMBER') {
-            totalPersonalExpenses += amt;
+          if (tx.payerType === 'POOL') totalPoolSpent += amt;
+          else {
+            totalPersonal += amt;
             if (memberOutPockets[tx.payer] !== undefined) memberOutPockets[tx.payer] += amt;
           }
         }
       });
 
-      const remainingPool = totalPoolDeposits - totalPoolSpent;
-      
-      // Total expense that needs to be split equally across members
-      // (Total Pool Spent + Total Out of Pocket Spent)
-      const grandTotalTripCost = totalPoolSpent + totalPersonalExpenses;
-      const costPerPerson = grandTotalTripCost / numMembers;
+      const grandTotal = totalPoolSpent + totalPersonal;
+      const perPerson = grandTotal / num;
 
-      let html = `
-        <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700/60 mb-3 text-xs space-y-1">
-          <div class="flex justify-between text-slate-300">
-            <span>รวมค่าใช้จ่ายทั้งทริป:</span>
-            <span class="font-bold text-white">฿${grandTotalTripCost.toLocaleString('th-TH', {minimumFractionDigits:2})}</span>
-          </div>
-          <div class="flex justify-between text-indigo-300">
-            <span>เฉลี่ยคนละ:</span>
-            <span class="font-bold">฿${costPerPerson.toLocaleString('th-TH', {minimumFractionDigits:2})}</span>
-          </div>
-        </div>
-      `;
+      let html = `<div class="text-xs space-y-1 mb-2 text-slate-300">
+        <div>รวมทั้งทริป: <b>฿${grandTotal.toLocaleString('th-TH')}</b> | เฉลี่ยคนละ: <b>฿${perPerson.toLocaleString('th-TH')}</b></div>
+      </div>`;
 
-      // Member Net Balance Breakdown
-      html += `<div class="space-y-1.5">`;
       state.members.forEach(m => {
-        const deposited = memberDeposits[m] || 0;
-        const outOfPocket = memberOutPockets[m] || 0;
-        
-        // Net balance formula = (Amount paid for trip/pool) - (Fair share per person)
-        // Amount paid = Deposited into Pool + Out of pocket paid
-        const totalPaidByMember = deposited + outOfPocket;
-        const netBalance = totalPaidByMember - costPerPerson;
-
-        let statusText = "";
-        let colorClass = "";
-
-        if (netBalance >= 0) {
-          statusText = `ได้รับเงินคืน ฿${Math.abs(netBalance).toLocaleString('th-TH', {minimumFractionDigits:2})}`;
-          colorClass = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
-        } else {
-          statusText = `ต้องจ่ายเพิ่ม ฿${Math.abs(netBalance).toLocaleString('th-TH', {minimumFractionDigits:2})}`;
-          colorClass = "text-rose-400 bg-rose-500/10 border-rose-500/20";
-        }
-
-        html += `
-          <div class="flex items-center justify-between p-2 rounded-xl border text-xs ${colorClass}">
-            <div class="font-medium">${m}</div>
-            <div class="font-bold text-[11px]">${statusText}</div>
-          </div>
-        `;
+        const net = (memberDeposits[m] + memberOutPockets[m]) - perPerson;
+        const txt = net >= 0 ? `ได้คืน ฿${Math.abs(net).toLocaleString('th-TH')}` : `จ่ายเพิ่ม ฿${Math.abs(net).toLocaleString('th-TH')}`;
+        html += `<div class="flex justify-between p-2 rounded-xl text-xs border ${net >= 0 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-rose-400 bg-rose-500/10 border-rose-500/20'} mb-1">
+          <span>${m}</span><b>${txt}</b>
+        </div>`;
       });
-      html += `</div>`;
-
-      resultsContainer.innerHTML = html;
+      document.getElementById('settlementResults').innerHTML = html;
     }
 
-    // --- Action Handlers ---
     function handleDeposit(e) {
       e.preventDefault();
-      const payer = document.getElementById('depositPayer').value;
-      const amount = parseFloat(document.getElementById('depositAmount').value);
-      const note = document.getElementById('depositNote').value.trim();
-
-      if (!payer || isNaN(amount) || amount <= 0) return;
-
       state.transactions.push({
-        id: 'tx_' + Date.now(),
-        type: 'DEPOSIT',
-        payer: payer,
-        amount: amount,
-        title: note || `เติมเงินกองกลาง (${payer})`,
-        timestamp: Date.now()
+        id: 'tx_' + Date.now(), type: 'DEPOSIT', payer: document.getElementById('depositPayer').value,
+        amount: parseFloat(document.getElementById('depositAmount').value), title: document.getElementById('depositNote').value || 'เติมเงินกองกลาง'
       });
-
-      pushCloudState();
+      pushSheetData();
       closeModal('depositModal');
-      document.getElementById('depositAmount').value = '';
-      document.getElementById('depositNote').value = '';
-      Swal.fire({ icon: 'success', title: 'เติมเงินสำเร็จ!', timer: 1200, showConfirmButton: false, background: '#1e293b', color: '#fff' });
     }
 
     function handleExpense(e) {
       e.preventDefault();
-      const title = document.getElementById('expenseTitle').value.trim();
-      const amount = parseFloat(document.getElementById('expenseAmount').value);
       const payerType = document.getElementById('expensePayerType').value;
-      const payerMember = document.getElementById('expensePayerMember').value;
-      const category = document.getElementById('expenseCategory').value;
-
-      if (!title || isNaN(amount) || amount <= 0) return;
-
       state.transactions.push({
-        id: 'tx_' + Date.now(),
-        type: 'EXPENSE',
-        title: title,
-        amount: amount,
-        payerType: payerType,
-        payer: payerType === 'MEMBER' ? payerMember : 'กองกลาง',
-        category: category,
-        timestamp: Date.now()
+        id: 'tx_' + Date.now(), type: 'EXPENSE', title: document.getElementById('expenseTitle').value,
+        amount: parseFloat(document.getElementById('expenseAmount').value), payerType: payerType,
+        payer: payerType === 'MEMBER' ? document.getElementById('expensePayerMember').value : 'กองกลาง',
+        category: document.getElementById('expenseCategory').value
       });
-
-      pushCloudState();
+      pushSheetData();
       closeModal('expenseModal');
-      document.getElementById('expenseTitle').value = '';
-      document.getElementById('expenseAmount').value = '';
-      Swal.fire({ icon: 'success', title: 'บันทึกรายการแล้ว!', timer: 1200, showConfirmButton: false, background: '#1e293b', color: '#fff' });
-    }
-
-    function deleteTx(id) {
-      Swal.fire({
-        title: 'ยืนยันลบรายการ?',
-        text: 'รายการนี้จะถูกลบออกจากทริปของทุกคน',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#475569',
-        confirmButtonText: 'ลบรายการ',
-        cancelButtonText: 'ยกเลิก',
-        background: '#1e293b',
-        color: '#fff'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          state.transactions = state.transactions.filter(t => t.id !== id);
-          pushCloudState();
-        }
-      });
     }
 
     async function openAddMemberModal() {
-      const { value: name } = await Swal.fire({
-        title: 'เพิ่มสมาชิกใหม่',
-        input: 'text',
-        inputPlaceholder: 'ใส่ชื่อเพื่อน...',
-        showCancelButton: true,
-        confirmButtonText: 'เพิ่ม',
-        cancelButtonText: 'ยกเลิก',
-        background: '#1e293b',
-        color: '#fff',
-        confirmButtonColor: '#6366f1'
-      });
-
-      if (name && name.trim()) {
-        const cleanName = name.trim();
-        if (!state.members.includes(cleanName)) {
-          state.members.push(cleanName);
-          pushCloudState();
-        }
+      const { value: name } = await Swal.fire({ title: 'เพิ่มสมาชิก', input: 'text', background: '#1e293b', color: '#fff' });
+      if (name && !state.members.includes(name.trim())) {
+        state.members.push(name.trim());
+        pushSheetData();
       }
     }
 
-    function removeMember(name) {
-      if (state.members.length <= 1) {
-        Swal.fire({ icon: 'error', title: 'ต้องมีสมาชิกอย่างน้อย 1 คน', background: '#1e293b', color: '#fff' });
-        return;
-      }
-      state.members = state.members.filter(m => m !== name);
-      pushCloudState();
-    }
-
-    // --- Room & Modal Helpers ---
     function switchRoom() {
-      const code = document.getElementById('inputRoomCode').value.trim().toUpperCase();
-      if (!code) return;
-      state.roomCode = code;
-      localStorage.setItem('trip_room_code', code);
-      loadFromLocalCache();
-      fetchCloudState();
+      state.roomCode = document.getElementById('inputRoomCode').value.trim().toUpperCase();
+      fetchSheetData();
       closeModal('syncModal');
-      Swal.fire({ icon: 'success', title: `เข้าสู่ห้อง #${code} แล้ว`, timer: 1200, showConfirmButton: false, background: '#1e293b', color: '#fff' });
-    }
-
-    function generateRandomRoom() {
-      document.getElementById('inputRoomCode').value = "TRIP" + Math.floor(1000 + Math.random() * 9000);
     }
 
     function togglePayerMemberSelect() {
-      const type = document.getElementById('expensePayerType').value;
-      const group = document.getElementById('payerMemberGroup');
-      if (type === 'MEMBER') {
-        group.classList.remove('hidden');
-      } else {
-        group.classList.add('hidden');
-      }
+      document.getElementById('payerMemberGroup').classList.toggle('hidden', document.getElementById('expensePayerType').value !== 'MEMBER');
     }
 
     function openShareModal() {
-      const shareUrl = `${window.location.origin}${window.location.pathname}?room=${state.roomCode}`;
+      const url = `${window.location.origin}${window.location.pathname}?room=${state.roomCode}`;
       document.getElementById('qrcode').innerHTML = '';
-      new QRCode(document.getElementById('qrcode'), {
-        text: shareUrl,
-        width: 140,
-        height: 140
-      });
+      new QRCode(document.getElementById('qrcode'), { text: url, width: 120, height: 120 });
       openModal('shareModal');
     }
 
     function copyShareLink() {
-      const shareUrl = `${window.location.origin}${window.location.pathname}?room=${state.roomCode}`;
-      navigator.clipboard.writeText(shareUrl).then(() => {
-        Swal.fire({ icon: 'success', title: 'คัดลอกลิงก์ทริปแล้ว!', timer: 1200, showConfirmButton: false, background: '#1e293b', color: '#fff' });
-      });
+      navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}?room=${state.roomCode}`);
+      Swal.fire({ icon: 'success', title: 'คัดลอกลิงก์แล้ว', timer: 1000, showConfirmButton: false, background: '#1e293b', color: '#fff' });
     }
 
     function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
