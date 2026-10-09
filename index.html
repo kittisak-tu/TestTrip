@@ -66,11 +66,11 @@
 
       <div class="grid grid-cols-2 gap-2 pt-2 text-xs">
         <div class="bg-emerald-50/80 p-2.5 rounded-2xl border border-emerald-100/80 text-center">
-          <div class="text-emerald-600 text-[11px] font-medium">📥 เติมเข้ากองกลาง</div>
+          <div class="text-emerald-600 text-[11px] font-medium">📥 เติมเข้ากองกลางรวม</div>
           <div class="font-bold text-emerald-700 text-sm mt-0.5" id="dispTotalPoolIn">฿0.00</div>
         </div>
         <div class="bg-rose-50/80 p-2.5 rounded-2xl border border-rose-100/80 text-center">
-          <div class="text-rose-500 text-[11px] font-medium">📤 จ่ายออกสากองกลาง</div>
+          <div class="text-rose-500 text-[11px] font-medium">📤 จ่ายออกสากองกลางรวม</div>
           <div class="font-bold text-rose-600 text-sm mt-0.5" id="dispTotalPoolOut">฿0.00</div>
         </div>
       </div>
@@ -107,7 +107,7 @@
       <div id="membersList" class="flex flex-wrap gap-2"></div>
     </div>
 
-    <!-- 4. Transaction History Logs (With Delete Button) -->
+    <!-- 4. Transaction History Logs -->
     <div class="pastel-card rounded-2xl p-4 shadow-sm border border-slate-200">
       <h2 class="text-xs font-bold text-slate-700 mb-3 flex items-center gap-1.5">
         <i class="fa-solid fa-list-check text-pink-400"></i> ประวัติรายการทั้งหมด
@@ -118,23 +118,32 @@
     <!-- 5. Settlement Summary Card -->
     <div class="pastel-card rounded-2xl p-4 shadow-sm border border-purple-200 bg-purple-50/30">
       <h2 class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-        <i class="fa-solid fa-calculator text-purple-500"></i> สรุปยอดเคลียร์เงินทริป
+        <i class="fa-solid fa-calculator text-purple-500"></i> สรุปยอดเคลียร์เงินจบทริป (หารคืนจากกองกลาง)
       </h2>
       <div id="settlementResults" class="space-y-2 mt-2 pt-2 border-t border-purple-100"></div>
     </div>
   </main>
 
-  <!-- Modals -->
-  <div id="syncModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="pastel-card w-full max-w-sm rounded-3xl p-5 border border-white shadow-xl">
+  <!-- Modals Section (With Backdrop Click Close & X Button) -->
+
+  <!-- Modal 1: Sync Room -->
+  <div id="syncModal" onclick="handleBackdropClick(event, 'syncModal')" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="pastel-card w-full max-w-sm rounded-3xl p-5 border border-white shadow-xl relative">
+      <button onclick="closeModal('syncModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-100">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
       <h3 class="font-bold text-slate-800 mb-3">สลับรหัสห้องทริป (Trip Code)</h3>
       <input type="text" id="inputRoomCode" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 mb-3 uppercase font-mono tracking-wider">
       <button onclick="switchRoom()" class="w-full bg-indigo-400 text-white font-medium py-2.5 rounded-xl text-sm shadow-sm">เข้าสู่ห้องนี้</button>
     </div>
   </div>
 
-  <div id="depositModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="pastel-card w-full max-w-sm rounded-3xl p-5 border border-white shadow-xl">
+  <!-- Modal 2: Deposit -->
+  <div id="depositModal" onclick="handleBackdropClick(event, 'depositModal')" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="pastel-card w-full max-w-sm rounded-3xl p-5 border border-white shadow-xl relative">
+      <button onclick="closeModal('depositModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-100">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
       <h3 class="font-bold text-slate-800 mb-3">เติมเงินเข้ากองกลาง 🐷</h3>
       <form onsubmit="handleDeposit(event)" class="space-y-3">
         <div>
@@ -154,8 +163,12 @@
     </div>
   </div>
 
-  <div id="expenseModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="pastel-card w-full max-w-sm rounded-3xl p-5 border border-white shadow-xl">
+  <!-- Modal 3: Expense -->
+  <div id="expenseModal" onclick="handleBackdropClick(event, 'expenseModal')" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="pastel-card w-full max-w-sm rounded-3xl p-5 border border-white shadow-xl relative">
+      <button onclick="closeModal('expenseModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-100">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
       <h3 class="font-bold text-slate-800 mb-3">บันทึกค่าใช้จ่าย 🧾</h3>
       <form onsubmit="handleExpense(event)" class="space-y-3">
         <div>
@@ -192,8 +205,12 @@
     </div>
   </div>
 
-  <div id="shareModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="pastel-card w-full max-w-sm rounded-3xl p-5 text-center border border-white shadow-xl">
+  <!-- Modal 4: Share -->
+  <div id="shareModal" onclick="handleBackdropClick(event, 'shareModal')" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="pastel-card w-full max-w-sm rounded-3xl p-5 text-center border border-white shadow-xl relative">
+      <button onclick="closeModal('shareModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-100">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
       <h3 class="font-bold text-slate-800 mb-2">แชร์ทริปให้เพื่อน</h3>
       <div id="qrcode" class="bg-white p-3 inline-block rounded-2xl shadow-sm my-2 border border-pink-100"></div>
       <button onclick="copyShareLink()" class="w-full bg-pink-400 text-white font-medium py-2 rounded-xl text-xs mt-2 shadow-sm">คัดลอกลิงก์</button>
@@ -273,19 +290,15 @@
         }
       });
 
-      document.getElementById('dispPoolBalance').innerText = (totalDeposit - totalPoolSpent).toLocaleString('th-TH', { minimumFractionDigits: 2 });
+      const poolBalance = totalDeposit - totalPoolSpent;
+
+      document.getElementById('dispPoolBalance').innerText = poolBalance.toLocaleString('th-TH', { minimumFractionDigits: 2 });
       document.getElementById('dispTotalPoolIn').innerText = `฿${totalDeposit.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
       document.getElementById('dispTotalPoolOut').innerText = `฿${totalPoolSpent.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
       document.getElementById('memberCount').innerText = state.members.length;
 
       // Render Category Breakdown
-      const categoryIcons = {
-        'อาหาร': '🍔',
-        'เดินทาง': '🚗',
-        'ที่พัก': '🏨',
-        'เที่ยว': '🎟️',
-        'อื่นๆ': '📦'
-      };
+      const categoryIcons = { 'อาหาร': '🍔', 'เดินทาง': '🚗', 'ที่พัก': '🏨', 'เที่ยว': '🎟️', 'อื่นๆ': '📦' };
       
       document.getElementById('categorySummaryList').innerHTML = Object.keys(categoryTotals).map(cat => `
         <div class="bg-white/80 p-2 rounded-xl border border-slate-100 flex justify-between items-center">
@@ -339,41 +352,51 @@
       calculateSettlement();
     }
 
+    // Single Pool Settlement Calculation Logic
     function calculateSettlement() {
       const num = state.members.length;
       if (num === 0) return;
 
-      let totalPersonal = 0, totalPoolSpent = 0, totalPoolDeposits = 0;
-      let memberDeposits = {}, memberOutPockets = {};
-      state.members.forEach(m => { memberDeposits[m] = 0; memberOutPockets[m] = 0; });
+      let totalPoolDeposits = 0;
+      let totalPoolSpent = 0;
+      let memberOutPockets = {};
+
+      state.members.forEach(m => { memberOutPockets[m] = 0; });
 
       (state.transactions || []).forEach(tx => {
         const amt = Number(tx.amount);
         if (tx.type === 'DEPOSIT') {
           totalPoolDeposits += amt;
-          if (memberDeposits[tx.payer] !== undefined) memberDeposits[tx.payer] += amt;
         } else if (tx.type === 'EXPENSE') {
-          if (tx.payerType === 'POOL') totalPoolSpent += amt;
-          else {
-            totalPersonal += amt;
+          if (tx.payerType === 'POOL') {
+            totalPoolSpent += amt;
+          } else if (tx.payerType === 'MEMBER') {
             if (memberOutPockets[tx.payer] !== undefined) memberOutPockets[tx.payer] += amt;
           }
         }
       });
 
-      const grandTotal = totalPoolSpent + totalPersonal;
-      const perPerson = grandTotal / num;
+      // Remaining balance in single central pool
+      const remainingPool = totalPoolDeposits - totalPoolSpent;
+      const sharePerPersonFromPool = remainingPool / num;
 
       let html = `<div class="bg-white/80 p-2.5 rounded-xl border border-purple-100 text-xs space-y-1 mb-2 text-slate-600">
-        <div class="flex justify-between"><span>รวมค่าใช้จ่ายทั้งทริป:</span><b class="text-slate-800">฿${grandTotal.toLocaleString('th-TH', {minimumFractionDigits:2})}</b></div>
-        <div class="flex justify-between"><span>เฉลี่ยคนละ:</span><b class="text-purple-600">฿${perPerson.toLocaleString('th-TH', {minimumFractionDigits:2})}</b></div>
+        <div class="flex justify-between"><span>เงินกองกลางคงเหลือ:</span><b class="text-emerald-600">฿${remainingPool.toLocaleString('th-TH', {minimumFractionDigits:2})}</b></div>
+        <div class="flex justify-between"><span>ยอดหารคืนจากกองกลาง (ต่อคน):</span><b class="text-purple-600">฿${sharePerPersonFromPool.toLocaleString('th-TH', {minimumFractionDigits:2})}</b></div>
       </div>`;
 
       state.members.forEach(m => {
-        const net = (memberDeposits[m] + memberOutPockets[m]) - perPerson;
-        const txt = net >= 0 ? `ได้รับเงินคืน ฿${Math.abs(net).toLocaleString('th-TH', {minimumFractionDigits:2})}` : `ต้องจ่ายเพิ่ม ฿${Math.abs(net).toLocaleString('th-TH', {minimumFractionDigits:2})}`;
-        html += `<div class="flex justify-between p-2 rounded-xl text-xs border ${net >= 0 ? 'text-emerald-600 bg-emerald-50/80 border-emerald-100' : 'text-rose-500 bg-rose-50/80 border-rose-100'} mb-1">
-          <span class="font-medium">${m}</span><b>${txt}</b>
+        const outOfPocket = memberOutPockets[m] || 0;
+        // Total Refund = Share from remaining pool + Personal Out of pocket reimbursement
+        const totalRefund = sharePerPersonFromPool + outOfPocket;
+
+        let statusText = `ได้รับคืนจากกองกลาง ฿${totalRefund.toLocaleString('th-TH', {minimumFractionDigits:2})}`;
+        if (outOfPocket > 0) {
+          statusText += ` (รวมสำรองจ่าย ฿${outOfPocket.toLocaleString('th-TH')})`;
+        }
+
+        html += `<div class="flex justify-between p-2 rounded-xl text-xs border text-emerald-600 bg-emerald-50/80 border-emerald-100 mb-1">
+          <span class="font-medium">${m}</span><b>${statusText}</b>
         </div>`;
       });
       document.getElementById('settlementResults').innerHTML = html;
@@ -459,8 +482,13 @@
       Swal.fire({ icon: 'success', title: 'คัดลอกลิงก์แล้ว', timer: 1000, showConfirmButton: false });
     }
 
+    // Modal Controls with Backdrop Dismiss
     function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    function handleBackdropClick(e, id) {
+      if (e.target.id === id) closeModal(id);
+    }
+
     function openSyncModal() { openModal('syncModal'); }
     function openDepositModal() { openModal('depositModal'); }
     function openExpenseModal() { openModal('expenseModal'); }
